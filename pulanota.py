@@ -4,7 +4,8 @@ import re
 import io
 
 # Layout padrão em wide
-st.set_page_config(page_title="Análise de Notas Fiscais Faltantes", layout="wide")
+st.set_page_config(page_title="Análise de Notas Fiscais Faltantes")
+
 
 # 🌈 Estilos
 st.markdown("""
