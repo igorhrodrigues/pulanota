@@ -46,6 +46,7 @@ st.markdown("<div class='sub-title'>Faça upload de um arquivo .txt para identif
 # Upload
 uploaded_file = st.file_uploader("📂 Upload do arquivo TXT", type=["txt"])
 
+# Função para calcular faltantes
 def calcular_faltantes(start, end):
     return [n for n in range(start + 1, end)]
 
@@ -68,22 +69,21 @@ if uploaded_file:
         df["Fim"] = df["Fim"].astype(int)
         df["Qtd_Faltantes"] = df["Qtd_Faltantes"].astype(int)
 
-        # Números faltantes por faixa
+        # Cálculo dos faltantes por faixa
         df["Numeros_Faltantes"] = df.apply(lambda row: calcular_faltantes(row["Inicio"], row["Fim"]), axis=1)
 
-        # Listagem completa
+        # Coleta de todos os números
         all_missing = sum(df["Numeros_Faltantes"].tolist(), [])
         all_ate = df["Fim"].tolist()
 
         total_missing = len(all_missing)
         total_ate = len(all_ate)
 
-        # 📦 Card com os dois blocos de listagem
+        # 💡 CARD PRINCIPAL
         st.markdown("<div class='card'>", unsafe_allow_html=True)
 
         st.markdown(f"<h4>🔢 Total de notas faltantes: <span class='faltantes'>{total_missing}</span></h4>", unsafe_allow_html=True)
         st.markdown(f"<div class='copy-box'>{'   '.join([str(n) for n in all_missing])}</div>", unsafe_allow_html=True)
-
         st.download_button(
             "📋 Copiar Números Faltantes",
             data="\n".join([str(n) for n in all_missing]),
@@ -95,7 +95,6 @@ if uploaded_file:
 
         st.markdown(f"<h4>📌 Total de 'Até o documento fiscal': <span class='faltantes'>{total_ate}</span></h4>", unsafe_allow_html=True)
         st.markdown(f"<div class='copy-box'>{'   '.join([str(n) for n in all_ate])}</div>", unsafe_allow_html=True)
-
         st.download_button(
             "📋 Copiar Números 'Até o documento fiscal'",
             data="\n".join([str(n) for n in all_ate]),
@@ -103,7 +102,7 @@ if uploaded_file:
             mime="text/plain"
         )
 
-        # Exportar Excel com explode
+        # ✅ Exportação para Excel
         export_df = df.copy()
         export_df["Numeros_Faltantes"] = export_df["Numeros_Faltantes"].apply(lambda x: list(map(int, x)))
         export_df = export_df.explode("Numeros_Faltantes").reset_index(drop=True)
@@ -123,9 +122,32 @@ if uploaded_file:
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Detalhes por faixa
-        st.markdown("<h4 style='margin-top:40px;'>🧩 Detalhes da Análise</h4>", unsafe_allow_html=True)
+        # 🔎 DASHBOARDS ANALÍTICOS
+        st.markdown("### 📊 Análises e Dashboards")
 
+        # Métricas principais
+        col1, col2, col3 = st.columns(3)
+        col1.metric("📉 Faltantes Mínimo", df["Qtd_Faltantes"].min())
+        col2.metric("📈 Faltantes Máximo", df["Qtd_Faltantes"].max())
+        col3.metric("📊 Faltantes Médio", round(df["Qtd_Faltantes"].mean(), 2))
+
+        # Gráfico de barras
+        st.subheader("🔢 Quantidade de Faltantes por Faixa")
+        chart_df = df.copy()
+        chart_df["Faixa"] = chart_df["Inicio"].astype(str) + "–" + chart_df["Fim"].astype(str)
+        st.bar_chart(chart_df.set_index("Faixa")["Qtd_Faltantes"])
+
+        # Gráfico de linha
+        st.subheader("📈 Acúmulo de Faltantes")
+        df["Acumulado"] = df["Qtd_Faltantes"].cumsum()
+        st.line_chart(df[["Acumulado"]])
+
+        # Histograma
+        st.subheader("📐 Distribuição dos Tamanhos de Faixa Faltante")
+        st.bar_chart(df["Qtd_Faltantes"].value_counts().sort_index())
+
+        # Detalhes por faixa
+        st.markdown("### 🧩 Detalhes por Faixa")
         for _, row in df.iterrows():
             st.markdown(f"""
                 <div class='card'>
