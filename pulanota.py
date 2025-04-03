@@ -121,10 +121,6 @@ if uploaded_file:
         chart_df["Faixa"] = chart_df["Inicio"].astype(str) + "–" + chart_df["Fim"].astype(str)
         st.bar_chart(chart_df.set_index("Faixa")["Qtd_Faltantes"])
 
-        st.subheader("📈 Acúmulo de Faltantes")
-        df["Acumulado"] = df["Qtd_Faltantes"].cumsum()
-        st.line_chart(df[["Acumulado"]])
-
         st.subheader("📐 Distribuição dos Tamanhos de Faixa Faltante")
         st.bar_chart(df["Qtd_Faltantes"].value_counts().sort_index())
 
