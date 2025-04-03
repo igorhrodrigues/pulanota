@@ -77,7 +77,7 @@ if uploaded_file:
         # 🧾 Card principal com resultados
         st.markdown("<div class='card'>", unsafe_allow_html=True)
 
-        st.markdown(f"<h4>🔢 Total de notas faltantes: <span class='faltantes'>{total_missing}</span></h4>", unsafe_allow_html=True)
+        st.markdown(f"<h4>🧾 Total de notas faltantes: <span class='faltantes'>{total_missing}</span></h4>", unsafe_allow_html=True)
         st.markdown(f"<div class='copy-box'>{'   '.join([str(n) for n in all_missing])}</div>", unsafe_allow_html=True)
         st.download_button("📋 Copiar Números Faltantes", "\n".join(map(str, all_missing)), file_name="faltantes.txt")
 
