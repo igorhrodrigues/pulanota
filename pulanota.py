@@ -6,7 +6,7 @@ import io
 # Configuração da página
 st.set_page_config(page_title="Análise de Notas Fiscais Faltantes", layout="wide")
 
-# 🌈 CSS customizado para design bonito
+# 🌈 CSS customizado
 st.markdown("""
     <style>
         .big-title {
@@ -43,18 +43,15 @@ st.markdown("""
 st.markdown("<div class='big-title'>📄 Analisador de Documentos Fiscais Faltantes</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-title'>Faça upload de um arquivo .txt para identificar notas fiscais ausentes.</div><br>", unsafe_allow_html=True)
 
-# Upload do arquivo
+# Upload
 uploaded_file = st.file_uploader("📂 Upload do arquivo TXT", type=["txt"])
 
-# Função para calcular os números faltantes
 def calcular_faltantes(start, end):
     return [n for n in range(start + 1, end)]
 
-# Processamento do arquivo
 if uploaded_file:
     content = uploaded_file.read().decode("utf-8")
 
-    # Expressão regular
     pattern = re.compile(
         r"Do documento fiscal\s+\.*:\s+(\d+)\s+"
         r"Até o documento fiscal\s+\.*:\s+(\d+)\s+"
@@ -66,36 +63,47 @@ if uploaded_file:
     if not matches:
         st.error("❌ Nenhum dado encontrado no formato esperado.")
     else:
-        # Criação do dataframe
         df = pd.DataFrame(matches, columns=["Inicio", "Fim", "Qtd_Faltantes"])
         df["Inicio"] = df["Inicio"].astype(int)
         df["Fim"] = df["Fim"].astype(int)
         df["Qtd_Faltantes"] = df["Qtd_Faltantes"].astype(int)
 
-        # Geração das listas de faltantes
+        # Números faltantes por faixa
         df["Numeros_Faltantes"] = df.apply(lambda row: calcular_faltantes(row["Inicio"], row["Fim"]), axis=1)
 
-        # Todos os números faltantes
+        # Listagem completa
         all_missing = sum(df["Numeros_Faltantes"].tolist(), [])
-        total_missing = len(all_missing)
+        all_ate = df["Fim"].tolist()
 
-        # Bloco principal do resultado
+        total_missing = len(all_missing)
+        total_ate = len(all_ate)
+
+        # 📦 Card com os dois blocos de listagem
         st.markdown("<div class='card'>", unsafe_allow_html=True)
+
         st.markdown(f"<h4>🔢 Total de notas faltantes: <span class='faltantes'>{total_missing}</span></h4>", unsafe_allow_html=True)
         st.markdown(f"<div class='copy-box'>{'   '.join([str(n) for n in all_missing])}</div>", unsafe_allow_html=True)
 
-        # ⬅️ Botões alinhados à esquerda
-        st.markdown("<div style='text-align: left;'>", unsafe_allow_html=True)
-
         st.download_button(
-            "📋 Copiar Números",
+            "📋 Copiar Números Faltantes",
             data="\n".join([str(n) for n in all_missing]),
             file_name="numeros_faltantes.txt",
-            mime="text/plain",
-            use_container_width=False
+            mime="text/plain"
         )
 
-        # Explode para Excel
+        st.markdown("<hr>", unsafe_allow_html=True)
+
+        st.markdown(f"<h4>📌 Total de 'Até o documento fiscal': <span class='faltantes'>{total_ate}</span></h4>", unsafe_allow_html=True)
+        st.markdown(f"<div class='copy-box'>{'   '.join([str(n) for n in all_ate])}</div>", unsafe_allow_html=True)
+
+        st.download_button(
+            "📋 Copiar Números 'Até o documento fiscal'",
+            data="\n".join([str(n) for n in all_ate]),
+            file_name="numeros_ate_documento.txt",
+            mime="text/plain"
+        )
+
+        # Exportar Excel com explode
         export_df = df.copy()
         export_df["Numeros_Faltantes"] = export_df["Numeros_Faltantes"].apply(lambda x: list(map(int, x)))
         export_df = export_df.explode("Numeros_Faltantes").reset_index(drop=True)
@@ -107,14 +115,12 @@ if uploaded_file:
         buffer.seek(0)
 
         st.download_button(
-            "📥 Exportar Excel",
+            "📥 Exportar Excel com Faltantes",
             data=buffer,
             file_name="relatorio_faltantes.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            use_container_width=False
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-        st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
         # Detalhes por faixa
@@ -128,7 +134,7 @@ if uploaded_file:
                     <b>Início:</b> <span>{row["Inicio"]}</span> &nbsp;&nbsp;
                     <b>Fim:</b> <span>{row["Fim"]}</span> &nbsp;&nbsp;
                     <b>Notas Faltantes:</b> <span class='faltantes'>{row["Qtd_Faltantes"]}</span><br><br>
-                    <b>Números:</b><br>
+                    <b>Números Faltantes:</b><br>
                     <span class='faltantes'>{", ".join([str(n) for n in row["Numeros_Faltantes"]])}</span>
                 </div>
             """, unsafe_allow_html=True)
