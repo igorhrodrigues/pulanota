@@ -5,4 +5,4 @@ base = "light"
 headless = true
 
 [ui]
-layout = "wide"
+layout = "centered"
